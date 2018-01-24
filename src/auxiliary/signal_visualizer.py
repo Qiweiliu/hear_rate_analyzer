@@ -1,15 +1,32 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class SignalVisualizer:
-    def __init__(self):
+    """
+    Design for visualizing the
+    """
+
+    def __init__(self, processed_result):
+        self.processed_result = processed_result
         pass
 
-    def show_histogram(self, list):
-        plt.hist(list)
-        plt.show()
+    def show(self, antenna, distance, type, number):
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        signals = self.processed_result[str(antenna)][str(distance)][str(type)][number]
+        ax.plot(np.arange(0, len(signals)), [number] * len(signals), signals)
+        # plt.show(fig)
+        return fig
 
-
-if __name__ == '__main__':
-    signal_visualizer = SignalVisualizer()
-    signal_visualizer.show_histogram([1, 2, 3, 4, 5, 6, 7, 7, 8, 6, 4, 2, 2, 4, 324, 3, 4])
+    def show_spectrum(self, ffts, sample_rate):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.plot(np.absolute(
+            np.fft.fftfreq(
+                len(ffts),
+                1 / sample_rate
+            ) * 60),
+            ffts
+        )
+        return fig

@@ -2,6 +2,7 @@ from auxiliary.data_manager import DataManager
 from auxiliary.decoder import Decoder
 from auxiliary.mixer import Mixer
 from auxiliary.selector import Selector
+from auxiliary.signal_visualizer import SignalVisualizer
 from main.signal_processor import SignalProcessor
 from signals_process_tools.bandpass_filter import BandPassFilter
 from signals_process_tools.fft_generator import FftGenerator
@@ -14,7 +15,7 @@ import numpy as np
 # load data
 data_manager = DataManager()
 data = data_manager.load(
-    scenario='3_antennas_exercise_0_98_100',
+    scenario='3_antennas_relax_3blocks_0',
     path='../../data_collection')
 
 # read data
@@ -54,14 +55,15 @@ signal_processor = SignalProcessor(
 )
 processed_result = signal_processor.process(filtered_dynamic_signals)
 
-# check content
-# Todo: write a visualizer to visualize
-# plot 3d
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-signals = processed_result['1.0_7.0']['441']['windows'][0][0:100]
-ax.plot(np.arange(0, len(signals)), [441] * len(signals), signals)
-plt.show()
+# visualize
+signal_visualizer = SignalVisualizer(processed_result)
+figure = signal_visualizer.show(
+    antenna='1.0_4.0',
+    distance='374',
+    type='windows',
+    number=0
+)
+plt.show(figure)
 
 # define selector
 selector = Selector(processed_result)
@@ -78,13 +80,11 @@ mixed_result = mixer.mix(selected_ffts)
 rate_analyzer = RateAnalyzer(mixed_result, sample_rate)
 
 # plot result
-plt.plot(np.absolute(
-    np.fft.fftfreq(
-        len(mixed_result[0]),
-        1 / sample_rate) * 60),
-    mixed_result[0])
-plt.show()
-print(rate_analyzer.get())
+spectrum_figure = signal_visualizer.show_spectrum(
+    ffts=mixed_result[0],
+    sample_rate=sample_rate
+)
+plt.show(spectrum_figure)
 
 # heart_rate_medians = []
 # indices = []
