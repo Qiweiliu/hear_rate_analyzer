@@ -119,7 +119,7 @@ def analyze_energy():
         fft_generator=fft_generator
     )
     energy_ratios = energy_ratio_analyzer.analyze(signals)
-    pprint.pprint(energy_ratios)
+    # pprint.pprint(energy_ratios)
 
 
 # run()
