@@ -1,3 +1,5 @@
+import pprint
+
 from auxiliary.data_manager import DataManager
 from auxiliary.decoder import Decoder
 from auxiliary.mixer import Mixer
@@ -5,6 +7,7 @@ from auxiliary.selector import Selector
 from auxiliary.signal_visualizer import SignalVisualizer
 from main.signal_processor import SignalProcessor
 from signals_process_tools.bandpass_filter import BandPassFilter
+from signals_process_tools.energy_ratio_analyzer import EnergyRatioAnalyzer
 from signals_process_tools.fft_generator import FftGenerator
 from signals_process_tools.rate_analyzer import RateAnalyzer
 from signals_process_tools.sliding_windows_maker import SlidingWindowsMaker
@@ -12,79 +15,116 @@ from signals_process_tools.static_filter import StdStaticFilter
 import matplotlib.pyplot as plt
 import numpy as np
 
-# load data
-data_manager = DataManager()
-data = data_manager.load(
-    scenario='3_antennas_relax_3blocks_0',
-    path='../../data_collection')
 
-# read data
-raw_signals = [data['walabot']]
-sample_rate = data['sample_rate']
-arduino_heart_rates = data['arduino']
-# arduino_heart_rates = np.array(
-#     arduino_heart_rates,
-#     dtype=int
-# )
+def run():
+    # load data
+    data_manager = DataManager()
+    data = data_manager.load(
+        scenario='3_antennas_relax_3blocks_0',
+        path='../../data_collection')
 
-# create decoder to decode signals from different antenna pairs
-decoder = Decoder(raw_signals)
-decoded = decoder.decode()
+    # read data
+    raw_signals = [data['walabot']]
+    sample_rate = data['sample_rate']
+    arduino_heart_rates = data['arduino']
+    # arduino_heart_rates = np.array(
+    #     arduino_heart_rates,
+    #     dtype=int
+    # )
 
-# create signal process components
-static_filter = StdStaticFilter()
-filtered_dynamic_signals = static_filter.filter(decoded, 10)
-fft_generator = FftGenerator()
-sliding_windows_maker = SlidingWindowsMaker(
-    window_size=330,
-    interval=330
-)
+    # create decoder to decode signals from different antenna pairs
+    decoder = Decoder(raw_signals)
+    decoded = decoder.decode()
 
-# 0.866, 3.333
-bandpass_filter = BandPassFilter(
-    lowcut=0.866,
-    highcut=3.333,
-    frequency=sample_rate,
-    order=5
-)
+    # create signal process components
+    static_filter = StdStaticFilter()
+    filtered_dynamic_signals = static_filter.filter(decoded, 10)
+    fft_generator = FftGenerator()
+    sliding_windows_maker = SlidingWindowsMaker(
+        window_size=330,
+        interval=330
+    )
 
-# set up signal processor
-signal_processor = SignalProcessor(
-    sample_rate, fft_generator, sliding_windows_maker,
-    bandpass_filter
-)
-processed_result = signal_processor.process(filtered_dynamic_signals)
+    # 0.866, 3.333
+    bandpass_filter = BandPassFilter(
+        lowcut=0.866,
+        highcut=3.333,
+        frequency=sample_rate,
+        order=5
+    )
 
-# visualize
-signal_visualizer = SignalVisualizer(processed_result)
-figure = signal_visualizer.show(
-    antenna='1.0_4.0',
-    distance='374',
-    type='windows',
-    number=0
-)
-plt.show(figure)
+    # set up signal processor
+    signal_processor = SignalProcessor(
+        sample_rate, fft_generator, sliding_windows_maker,
+        bandpass_filter
+    )
+    processed_result = signal_processor.process(filtered_dynamic_signals)
 
-# define selector
-selector = Selector(processed_result)
-selected_ffts = selector.select_all_ffts(number=0)
+    # visualize
+    signal_visualizer = SignalVisualizer()
+    figure = signal_visualizer.show(
+        processed_result=processed_result,
+        antenna='1.0_4.0',
+        distance='374',
+        type='windows',
+        number=0
+    )
+    plt.show(figure)
 
-# select antennas
-# selected_ffts = selector.select_antenna_pairs(['1.0_7.0'], 0)
+    # define selector
+    selector = Selector(processed_result)
+    selected_ffts = selector.select_all_ffts(number=0)
 
-# mix signals
-mixer = Mixer()
-mixed_result = mixer.mix(selected_ffts)
+    # select antennas
+    # selected_ffts = selector.select_antenna_pairs(['1.0_7.0'], 0)
 
-# get heart rate result
-rate_analyzer = RateAnalyzer(mixed_result, sample_rate)
+    # mix signals
+    mixer = Mixer()
+    mixed_result = mixer.mix(selected_ffts)
 
-# plot result
-spectrum_figure = signal_visualizer.show_spectrum(
-    ffts=mixed_result[0],
-    sample_rate=sample_rate
-)
-plt.show(spectrum_figure)
+    # get heart rate result
+    rate_analyzer = RateAnalyzer(mixed_result, sample_rate)
+
+    # plot result
+    spectrum_figure = signal_visualizer.show_spectrum(
+        ffts=mixed_result[0],
+        sample_rate=sample_rate
+    )
+    plt.show(spectrum_figure)
+
+    # show heart rate result
+    print('The heart rate is:', rate_analyzer.get())
+
+
+def analyze_noise_signal():
+    signals = np.load('../../data_collection/noise_sample.npy')[100:]
+    rate_analyzer = RateAnalyzer([signals], 31.75)
+    print(len(signals))
+    signal_visualizer = SignalVisualizer()
+    time_series_figure = signal_visualizer.show_two_dimension(signals)
+    plt.show(time_series_figure)
+    print('The heart rate is:', rate_analyzer.get())
+
+
+def analyze_energy():
+    signals = [np.load('../../data_collection/noise_sample.npy')]
+    sliding_windows_maker = SlidingWindowsMaker(
+        window_size=100,
+        interval=100
+    )
+    fft_generator = FftGenerator()
+    # analyze energy ratios
+    energy_ratio_analyzer = EnergyRatioAnalyzer(
+        sliding_windows_maker=sliding_windows_maker,
+        fft_generator=fft_generator
+    )
+    energy_ratios = energy_ratio_analyzer.analyze(signals)
+    pprint.pprint(energy_ratios)
+
+
+# run()
+# analyze_noise_signal()
+analyze_energy()
 
 # heart_rate_medians = []
 # indices = []
