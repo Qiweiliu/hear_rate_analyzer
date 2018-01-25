@@ -8,33 +8,27 @@ from signals_process_tools.sliding_windows_maker import SlidingWindowsMaker
 
 class MyTestCase(unittest.TestCase):
     def setUp(self):
-        self.mock_signals = [
-            [1, 2, 3, 4],
-            [5, 6, 7, 8]
-        ]
         self.t = np.linspace(0, 1, 500)
-        self.mock_analyze_signals = [np.sin(2 * np.pi * 100 * self.t) + 3 * np.sin(2 * np.pi * 30 * self.t)]
-        sliding_windows_maker = SlidingWindowsMaker(
+        self.noise_component = np.append(np.random.normal(0, 1, 100), [0] * 400)
+        self.mock_analyze_signals = [np.sin(2 * np.pi * 100 * self.t) + 3 * np.sin(2 * np.pi * 30 * self.t),
+                                     np.sin(2 * np.pi * 100 * self.t) + 3 * np.sin(2 * np.pi * 30 * self.t)]
+        self.mock_noised_signals = [np.sin(2 * np.pi * 100 * self.t) + 3 * np.sin(2 * np.pi * 30 * self.t)
+                                    +
+                                    self.noise_component,
+                                    np.sin(2 * np.pi * 100 * self.t) + 3 * np.sin(2 * np.pi * 30 * self.t)
+                                    +
+                                    self.noise_component
+                                    ]
+        self.sliding_windows_maker = SlidingWindowsMaker(
             window_size=100,
             interval=100
         )
-        fft_generator = FftGenerator()
+        self.fft_generator = FftGenerator()
         self.energy_ration_analyzer = EnergyRatioAnalyzer(
-            sliding_windows_maker=sliding_windows_maker,
-            fft_generator=fft_generator
+            sliding_windows_maker=self.sliding_windows_maker,
+            fft_generator=self.fft_generator,
+            proportion=15
         )
-
-    def test_generate_result(self):
-        result = self.energy_ration_analyzer.generate_result(self.mock_signals)
-        self.assertEqual(4,
-                         result['0']['peak_energy']
-                         )
-        self.assertEqual(2.5,
-                         result['0']['average_energy']
-                         )
-        self.assertAlmostEqual(1.6,
-                               result['0']['p_a_ratio']
-                               )
 
     def test_analyze(self):
         """
@@ -50,4 +44,38 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(
             p_a_ratio_one,
             p_a_ratio_two
+        )
+
+        p_a_ratio_one = np.around(result['1']['0']['p_a_ratio'])
+        p_a_ratio_two = np.around(result['1']['1']['p_a_ratio'])
+        self.assertEqual(
+            p_a_ratio_one,
+            p_a_ratio_two
+        )
+
+    def test_analyze_noised_signals(self):
+        result = self.energy_ration_analyzer.analyze(
+            self.mock_noised_signals
+        )
+
+    def test_remove(self):
+        expected_value = np.array([0] * 100, dtype=complex)
+        for i in range(100, 500, 100):
+            expected_value += np.absolute(
+                np.fft.fft(
+                    self.mock_noised_signals[0]
+                    [
+                    i:
+                    i + 100
+                    ],
+                    100
+                )
+            )
+
+        # the proportion is set to 15 to eliminate the low power ration spectrum
+        result = self.energy_ration_analyzer.remove(signals_sets=self.mock_noised_signals)
+        # Only call tolist() method can enable the comparision function of the unittest
+        self.assertListEqual(
+            expected_value.tolist(),
+            result[0].tolist()
         )

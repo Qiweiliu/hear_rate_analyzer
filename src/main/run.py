@@ -1,5 +1,4 @@
 import pprint
-
 from auxiliary.data_manager import DataManager
 from auxiliary.decoder import Decoder
 from auxiliary.mixer import Mixer
@@ -41,8 +40,8 @@ def run():
     filtered_dynamic_signals = static_filter.filter(decoded, 10)
     fft_generator = FftGenerator()
     sliding_windows_maker = SlidingWindowsMaker(
-        window_size=330,
-        interval=330
+        window_size=300,
+        interval=300
     )
 
     # 0.866, 3.333
@@ -52,24 +51,35 @@ def run():
         frequency=sample_rate,
         order=5
     )
-
+    energy_ration_sliding_windows_maker = SlidingWindowsMaker(
+        window_size=100,
+        interval=100
+    )
+    energy_ratio_analyzer = EnergyRatioAnalyzer(
+        sliding_windows_maker=energy_ration_sliding_windows_maker,
+        fft_generator=fft_generator,
+        proportion=4
+    )
     # set up signal processor
     signal_processor = SignalProcessor(
-        sample_rate, fft_generator, sliding_windows_maker,
-        bandpass_filter
+        sample_rate=sample_rate,
+        energy_ratio_analyzer=energy_ratio_analyzer,
+        sliding_windows_maker=sliding_windows_maker,
+        bandpass_filter=bandpass_filter
     )
+
     processed_result = signal_processor.process(filtered_dynamic_signals)
 
     # visualize
     signal_visualizer = SignalVisualizer()
-    figure = signal_visualizer.show(
-        processed_result=processed_result,
-        antenna='1.0_4.0',
-        distance='374',
-        type='windows',
-        number=0
-    )
-    plt.show(figure)
+    # figure = signal_visualizer.show(
+    #     processed_result=processed_result,
+    #     antenna='1.0_4.0',
+    #     distance='393',
+    #     type='filtered_signals',
+    #     number=0
+    # )
+    # plt.show(figure)
 
     # define selector
     selector = Selector(processed_result)
@@ -108,6 +118,7 @@ def analyze_noise_signal():
 
 def analyze_energy():
     signals = [np.load('../../data_collection/noise_sample.npy')]
+    print(len(signals[0]))
     sliding_windows_maker = SlidingWindowsMaker(
         window_size=100,
         interval=100
@@ -119,12 +130,12 @@ def analyze_energy():
         fft_generator=fft_generator
     )
     energy_ratios = energy_ratio_analyzer.analyze(signals)
-    # pprint.pprint(energy_ratios)
+    pprint.pprint(energy_ratios)
 
 
-# run()
+run()
 # analyze_noise_signal()
-analyze_energy()
+# analyze_energy()
 
 # heart_rate_medians = []
 # indices = []

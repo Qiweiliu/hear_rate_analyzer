@@ -7,9 +7,14 @@ class EnergyRatioAnalyzer:
     To calculate the maximum, average, and ratio.
     """
 
-    def __init__(self, sliding_windows_maker, fft_generator):
+    def __init__(self, sliding_windows_maker, fft_generator, proportion):
         self.sliding_windows_maker = sliding_windows_maker
         self.fft_generator = fft_generator
+        self.single_window_size = self.sliding_windows_maker.window_size
+        self.proportion = proportion
+
+    def set_fft_window_size(self, fft_window_size):
+        self.single_window_size = fft_window_size
 
     def analyze(self, signal_sets):
         """
@@ -26,8 +31,12 @@ class EnergyRatioAnalyzer:
         return result
 
     def generate_result(self, windows):
+        """
+        :param windows:
+        :return:
+        """
         # TODO: The ffts size may have effects
-        ffts = self.fft_generator.generate(windows, len(windows[0]))
+        ffts = self.fft_generator.generate(windows, self.single_window_size)
         result = {}
         i = 0
         for fft_result in ffts:
@@ -42,7 +51,29 @@ class EnergyRatioAnalyzer:
                 'average_energy':
                     mean,
                 'p_a_ratio':
-                    ratio
+                    ratio,
+                'signals':
+                    fft_result
             }
             i += 1
+        return result
+
+    def remove(self, signals_sets):
+        """
+        Remove the section of signals that below the the standard
+        ..warning: The data type of ffts shall be always converted to real number！！！
+        :param signals_sets:
+        :param proportion: calculated from peak_energy / average_energy
+        :return: return a list that contain ffts corresponding to the input signal_sets
+        """
+        result_dictionary = self.analyze(signals_sets)
+        result = []
+        for index, attributes in result_dictionary.items():
+
+            # The partial_result shall be cleared after the addition process
+            partial_result = np.array([0] * self.single_window_size, dtype=complex)
+            for index, contents in attributes.items():
+                if contents['p_a_ratio'] >= self.proportion:
+                    partial_result += contents['signals']
+            result.append(partial_result)
         return result

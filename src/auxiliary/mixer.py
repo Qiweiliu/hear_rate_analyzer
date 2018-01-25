@@ -10,7 +10,7 @@ class Mixer:
         :param signal_sets:
         :return:
         """
-        result = np.array([0.0] * len(signal_sets[0]))
+        result = np.array([0.0] * len(signal_sets[0]), dtype=complex)
         for signals in signal_sets:
             result += signals
 
