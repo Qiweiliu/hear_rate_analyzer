@@ -10,11 +10,10 @@ class EnergyRatioAnalyzer:
     def __init__(self, sliding_windows_maker, fft_generator, proportion):
         self.sliding_windows_maker = sliding_windows_maker
         self.fft_generator = fft_generator
+
+        # the default windows size is set to the length of signals
         self.single_window_size = self.sliding_windows_maker.window_size
         self.proportion = proportion
-
-    def set_fft_window_size(self, fft_window_size):
-        self.single_window_size = fft_window_size
 
     def analyze(self, signal_sets):
         """
@@ -58,18 +57,20 @@ class EnergyRatioAnalyzer:
             i += 1
         return result
 
-    def remove(self, signals_sets):
+    def generate(self, signals_sets, size):
+
         """
         Remove the section of signals that below the the standard
         ..warning: The data type of ffts shall be always converted to real number！！！
+        :param size:
         :param signals_sets:
         :param proportion: calculated from peak_energy / average_energy
         :return: return a list that contain ffts corresponding to the input signal_sets
         """
+        self.single_window_size = size
         result_dictionary = self.analyze(signals_sets)
         result = []
         for index, attributes in result_dictionary.items():
-
             # The partial_result shall be cleared after the addition process
             partial_result = np.array([0] * self.single_window_size, dtype=complex)
             for index, contents in attributes.items():

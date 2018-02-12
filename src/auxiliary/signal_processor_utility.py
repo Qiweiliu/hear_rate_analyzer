@@ -3,7 +3,7 @@ from auxiliary.io_utility import IOUtility
 
 class SignalProcessorUtility(IOUtility):
 
-    def __init__(self, data):
+    def __init__(self, data=None):
         super().__init__(data)
         self.data = data
 

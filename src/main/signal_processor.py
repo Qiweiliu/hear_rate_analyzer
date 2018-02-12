@@ -8,16 +8,17 @@ from signals_process_tools.window_adder import WindowAdder
 
 
 class SignalProcessor:
-    def __init__(self, sample_rate, energy_ratio_analyzer,
-                 sliding_windows_maker, bandpass_filter):
+    def __init__(self, sample_rate, fft_generator,
+                 sliding_windows_maker, bandpass_filter, signal_processor_utility):
         self.sample_rate = sample_rate
-        self.energy_ratio_analyzer = energy_ratio_analyzer
+        self.fft_generator = fft_generator
         self.sliding_windows_maker = sliding_windows_maker
         self.bandpass_filter = bandpass_filter
         self.accurate_windows_size = int(
             np.around(
                 self.sample_rate / 0.01666666667)
         )
+        self.signal_processor_utility = signal_processor_utility
 
     def process(self, raw_signals):
         def save_to_dictionary(windows,
@@ -51,12 +52,10 @@ class SignalProcessor:
             # added_windows = filtered_signals
 
             # fft
-            # fft_generator = FftGenerator()
-            # ffts = fft_generator.generate(signals_sets=added_windows,
-            #                               size=self.accurate_windows_size
-            #                               )
-            self.energy_ratio_analyzer.set_fft_window_size(self.accurate_windows_size)
-            ffts = self.energy_ratio_analyzer.remove(signals_sets=added_windows)
+            ffts = self.fft_generator.generate(signals_sets=added_windows,
+                                               size=self.accurate_windows_size
+                                               )
+
 
             rate_analyzer = RateAnalyzer(
                 amplitude_sets=ffts,
@@ -68,11 +67,11 @@ class SignalProcessor:
                                       )
 
         # create the utility and read content from the dictionary
-        signal_processor_utility = SignalProcessorUtility(raw_signals)
-        decoded_signals = signal_processor_utility.read()
+        self.signal_processor_utility.data = raw_signals
+        decoded_signals = self.signal_processor_utility.read()
 
         result = []
         for signals in decoded_signals:
             result.append(process_single_list(signals))
 
-        return signal_processor_utility.pack(result)
+        return self.signal_processor_utility.pack(result)

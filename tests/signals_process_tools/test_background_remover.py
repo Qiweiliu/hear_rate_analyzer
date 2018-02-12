@@ -13,13 +13,21 @@ class TestBackgroundRemover(unittest.TestCase):
         ])
         self.background_remover = BackGroundRemover()
 
-    def test_remove(self):
+    def test_continuous_remove(self):
         """
         The index subscription follow the rules of numpy
         :return:
         """
-        result = self.background_remover.remove(self.mock_signals)
+        result = self.background_remover.continuous_remove(self.mock_signals)
         # print(result)
         self.assertEqual(len(result), len(self.mock_signals) - 1)
         self.assertEqual(5, result[0][0])
         self.assertEqual(0, result[1][5])
+
+    def test_initial_remove(self):
+        result = self.background_remover.initial_remove(self.mock_signals)
+        # print(result)
+        self.assertListEqual(
+            [5, 3, 1, -1, -3, -5],
+            result[0].tolist()
+        )

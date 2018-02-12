@@ -20,7 +20,7 @@ data = data_manager.load(
 # read data
 raw_signals = np.array([data['walabot']][0])
 print(len(raw_signals))
-raw_signals = background_remover.remove(raw_signals)
+raw_signals = background_remover.continuous_remove(raw_signals)
 print(len(raw_signals))
 raw_signals = np.transpose(raw_signals)
 # plt.plot(raw_signals[156])

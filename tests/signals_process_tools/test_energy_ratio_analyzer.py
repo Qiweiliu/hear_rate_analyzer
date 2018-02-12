@@ -4,7 +4,7 @@ import numpy as np
 from signals_process_tools.energy_ratio_analyzer import EnergyRatioAnalyzer
 from signals_process_tools.fft_generator import FftGenerator
 from signals_process_tools.sliding_windows_maker import SlidingWindowsMaker
-
+import matplotlib.pyplot as plt
 
 class MyTestCase(unittest.TestCase):
     def setUp(self):
@@ -19,6 +19,7 @@ class MyTestCase(unittest.TestCase):
                                     +
                                     self.noise_component
                                     ]
+
         self.sliding_windows_maker = SlidingWindowsMaker(
             window_size=100,
             interval=100
@@ -29,6 +30,26 @@ class MyTestCase(unittest.TestCase):
             fft_generator=self.fft_generator,
             proportion=15
         )
+
+    def test_temp(self):
+        plt.plot(np.sin(2 * np.pi * 100 * self.t) + 3 * np.sin(2 * np.pi * 30 * self.t))
+        plt.show()
+        plt.plot(np.absolute(
+            np.fft.fft(np.sin(2 * np.pi * 100 * self.t) + 3 * np.sin(2 * np.pi * 30 * self.t)
+                       )
+        )
+        )
+        plt.show()
+        plt.plot(np.sin(2 * np.pi * 100 * self.t) + 3 * np.sin(2 * np.pi * 30 * self.t)
+                 +
+                 self.noise_component)
+        plt.show()
+        plt.plot(np.absolute(
+            np.fft.fft(np.sin(2 * np.pi * 100 * self.t) + 3 * np.sin(2 * np.pi * 30 * self.t) + self.noise_component
+                       )
+        )
+        )
+        plt.show()
 
     def test_analyze(self):
         """
