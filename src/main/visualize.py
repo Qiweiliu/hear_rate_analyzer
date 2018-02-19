@@ -8,7 +8,7 @@ import numpy as np
 from auxiliary.static_filter_utility import StaticFilterUtility
 from signals_process_tools.bandpass_filter import BandPassFilter
 from signals_process_tools.matrix_bandpass_filter import MatrixBandpassFilter
-from sklearn import preprocessing
+
 import matplotlib.pyplot as plt
 
 from signals_process_tools.window_adder import WindowAdder
@@ -20,7 +20,7 @@ from signals_process_tools.background_remover import BackGroundRemover
 data_manager = DataManager()
 # 3_antennas_relax_no_breathe
 data = data_manager.load(
-    scenario='3_antennas_relax_no_breathe',
+    scenario='3_antennas_office_half_distance_noBreathe_0_64',
     path='../../data_collection')
 sample_rate = data['sample_rate']
 # read data
@@ -41,7 +41,7 @@ bandpass_filter = BandPassFilter(
 # remove background first
 reader = StaticFilterUtility(decoded_signals)
 background_remover = BackGroundRemover()
-removed_background_matrix = background_remover.initial_remove(reader.read())[0]
+removed_background_matrix = background_remover.initial_remove(decoded_signals)
 # plt.plot(decoded_signals['1.0_4.0'].transpose()[50])
 # plt.show()
 
@@ -63,7 +63,7 @@ removed_background_matrix = background_remover.initial_remove(reader.read())[0]
 #
 # mix = removed_matrix.transpose()[195][100:]
 # 162
-mix = removed_background_matrix.transpose()[33]
+mix = removed_background_matrix.transpose()[65]
 # mix = bandpass_filter.filter([mix])[0]
 # separate filter
 

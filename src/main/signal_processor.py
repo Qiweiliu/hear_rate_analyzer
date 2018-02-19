@@ -56,7 +56,6 @@ class SignalProcessor:
                                                size=self.accurate_windows_size
                                                )
 
-
             rate_analyzer = RateAnalyzer(
                 amplitude_sets=ffts,
                 sample_rate=self.sample_rate

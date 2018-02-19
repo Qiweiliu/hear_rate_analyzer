@@ -8,7 +8,10 @@ class StdStaticFilter:
     Eliminate static signal by the standard deviation
     """
 
-    def filter(self, raw_dictionary, rank):
+    def __init__(self, rank):
+        self.rank = rank
+
+    def filter(self, raw_dictionary):
         """
         :param raw_dictionary: A set of raw signals returned by Walabot.The format is [[[],[]], [[],[]]]
         The index of the list represents the distance
@@ -27,7 +30,7 @@ class StdStaticFilter:
             std = np.std(raw_signal, axis=0)
 
             # only sort indices
-            n_largest_index = np.argsort(std)[-rank:]
+            n_largest_index = np.argsort(std)[-self.rank:]
             n_largest_contiguous_signals = raw_signal[:, n_largest_index]
 
             i = 0
