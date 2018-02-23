@@ -1,12 +1,15 @@
 from scipy.signal import butter, lfilter
 
 
-class BandPassFilter():
-    def __init__(self, lowcut, highcut, frequency, order):
+class BandPassFilter:
+    def __init__(self, lowcut, highcut, order, frequency=None):
         self.lowcut = lowcut
         self.highcut = highcut
-        self.frequency = frequency
         self.order = order
+        self.frequency = frequency
+
+    def set_sample_rate(self, sample_rate):
+        self.frequency = sample_rate
 
     def filter(self, signals):
         result = []

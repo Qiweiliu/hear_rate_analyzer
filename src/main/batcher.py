@@ -13,25 +13,31 @@ class Batcher:
     def batcher_process(self, folder_path):
         result = {}
         file_names = os.listdir(folder_path)
-        file_names.remove('.DS_Store')
+
+        if '.DS_Store' in file_names:
+            file_names.remove('.DS_Store')
+
         for file_name in file_names:
             file_name = os.path.splitext(file_name)[0]
-            result[file_name] = self.start(file_name).tolist()
-        np.save('current_directory_result', result)
+            result[file_name] = self.start(file_name, folder_path).tolist()
+        np.save(folder_path + '/' + 'current_directory_result.npy', result)
         return result
 
-    def start(self, file_name):
+    def start(self, file_name, folder_path):
         # load data
         data_manager = DataManager()
         data = data_manager.load(
             scenario=file_name,
-            path='../../data_collection')
+            path=folder_path)
 
         # read data
         raw_signals = [data['walabot']]
         sample_rate = data['sample_rate']
-        filtered_dynamic_signals = self.signal_preprocessor.preprocess(raw_signals)
-        processed_result = self.signal_processor.process(filtered_dynamic_signals)
+
+        # initialize sample_rate
+
+        filtered_dynamic_signals = self.signal_preprocessor.preprocess(raw_signals, sample_rate)
+        processed_result = self.signal_processor.process(filtered_dynamic_signals, sample_rate)
         heart_rates = self.signal_postprocessor.post_process(processed_result, sample_rate)
         return heart_rates
 

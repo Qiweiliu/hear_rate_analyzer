@@ -3,7 +3,7 @@ import numpy as np
 
 
 class MatrixBandpassFilter:
-    def __init__(self, bandpass_filter):
+    def __init__(self, bandpass_filter, sample_rate=None):
         self.bandpass_filter = bandpass_filter
 
     def filter(self, decoded_signals):
@@ -27,3 +27,6 @@ class MatrixBandpassFilter:
                 raw_signals.transpose()
             )
         ).transpose()
+
+    def set_sample_rate(self, sample_rate):
+        self.bandpass_filter.set_sample_rate(sample_rate)

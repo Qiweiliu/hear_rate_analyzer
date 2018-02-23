@@ -7,7 +7,7 @@ class SignalPreprocessor:
         self.background_remover = background_remover
         self.matrix_bandpass_filter = matrix_bandpass_filter
 
-    def preprocess(self, raw_signals):
+    def preprocess(self, raw_signals, sample_rate):
         # create decoder to decode signals from different antenna pairs
         decoder = Decoder(raw_signals)
         decoded = decoder.decode()
@@ -15,6 +15,8 @@ class SignalPreprocessor:
         # remove background signals
         decoded = self.background_remover.initial_remove(decoded)
 
+        # initialize sample rate
+        self.matrix_bandpass_filter.set_sample_rate(sample_rate)
         decoded = self.matrix_bandpass_filter.filter(decoded)
 
         # create signal process components

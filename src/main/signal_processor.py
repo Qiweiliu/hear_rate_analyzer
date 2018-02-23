@@ -8,19 +8,16 @@ from signals_process_tools.window_adder import WindowAdder
 
 
 class SignalProcessor:
-    def __init__(self, sample_rate, fft_generator,
+    def __init__(self, fft_generator,
                  sliding_windows_maker, bandpass_filter, signal_processor_utility):
-        self.sample_rate = sample_rate
         self.fft_generator = fft_generator
         self.sliding_windows_maker = sliding_windows_maker
         self.bandpass_filter = bandpass_filter
-        self.accurate_windows_size = int(
-            np.around(
-                self.sample_rate / 0.01666666667)
-        )
+        self.accurate_windows_size = 0
         self.signal_processor_utility = signal_processor_utility
+        self.sample_rate = None
 
-    def process(self, raw_signals):
+    def process(self, raw_signals, sample_rate):
         def save_to_dictionary(windows,
                                filtered_signals,
                                added_windows,
@@ -64,6 +61,16 @@ class SignalProcessor:
             return save_to_dictionary(windows,
                                       filtered_signals, added_windows, ffts, heart_rates
                                       )
+
+        #
+        self.sample_rate = sample_rate
+        self.bandpass_filter.set_sample_rate(sample_rate)
+
+        # compute accurate size
+        self.accurate_windows_size = int(
+            np.around(
+                sample_rate / 0.01666666667)
+        )
 
         # create the utility and read content from the dictionary
         self.signal_processor_utility.data = raw_signals
